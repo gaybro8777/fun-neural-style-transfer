@@ -1,3 +1,5 @@
+import json
+import os
 import numpy as np
 from PIL import Image
 import torch
@@ -105,3 +107,58 @@ def plot_result(p, a, x, figsize):
     ax3.get_yaxis().set_visible(False)
 
     plt.show()
+
+
+def cb_every_step(base_save_dir):
+    """Callback sample for each step of transferring."""
+
+    if not isinstance(base_save_dir, str) or not len(base_save_dir) > 0:
+        def every_step(step, content, style, target, losses):
+            pass
+
+        return every_step
+
+    base_save_dir = str(base_save_dir)
+    os.makedirs(base_save_dir, exist_ok=True)
+
+    def every_step(step, content, style, target, losses):
+        save_dir = os.path.join(base_save_dir, str(step))
+        os.makedirs(save_dir, exist_ok=True)
+
+        target_path = os.path.join(save_dir, 'target.jpg')
+        target = load_image_from_tensor(target, pillow_able=True)
+        target.save(target_path, "JPEG")
+
+    return every_step
+
+
+def cb_final_step(base_save_dir):
+    """Callback sample for final step"""
+    if not isinstance(base_save_dir, str) or not len(base_save_dir) > 0:
+        def final_step(content, style, target, history):
+            pass
+
+        return final_step
+
+    base_save_dir = str(base_save_dir)
+    os.makedirs(base_save_dir, exist_ok=True)
+
+    def final_step(content, style, target, history):
+        content_path = os.path.join(base_save_dir, 'content.jpg')
+        style_path = os.path.join(base_save_dir, 'style.jpg')
+        target_path = os.path.join(base_save_dir, 'target.jpg')
+        history_path = os.path.join(base_save_dir, 'history.json')
+
+        content = load_image_from_tensor(content, pillow_able=True)
+        content.save(content_path, "JPEG")
+
+        style = load_image_from_tensor(style, pillow_able=True)
+        style.save(style_path, "JPEG")
+
+        target = load_image_from_tensor(target, pillow_able=True)
+        target.save(target_path, "JPEG")
+
+        with open(history_path, 'w') as f:
+            json.dump(history, f, indent=2)
+
+    return final_step

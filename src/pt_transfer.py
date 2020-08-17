@@ -30,7 +30,9 @@ def transfer(content_path,
              style_weights=None,
              alpha=8,
              beta=1e4,
-             save_dir=None):
+             save_dir=None,
+             cb_every_step=None,
+             cb_final_step=None):
     """ Image Style Transfer Using Convolutional Neural Networks
 
     Args:
@@ -45,6 +47,8 @@ def transfer(content_path,
         alpha (float): The impact weight of content.
         beta (float): The impact weight of style.
         save_dir (str): The directory for saving the result of model regarding content, style, and the target!
+        cb_every_step (callable): A callback function to handle output results in each step!
+        cb_final_step (callable): A callback function to handle output results in the final stage!
 
     Returns:
         A history information of losses during transferring.
@@ -139,6 +143,11 @@ def transfer(content_path,
         loss.backward(retain_graph=True)
         optimizer.step()
 
+        history['step'].append(step)
+        history['loss'].append(loss.item())
+        history['loss_content'].append(loss_content.item())
+        history['loss_style'].append(loss_style.item())
+
         # display results every n steps
         if step % log_every_step == 0:
             dt = datetime.now() - t0
@@ -149,30 +158,36 @@ def transfer(content_path,
                   f'Style Loss: {loss_style.item():.4}, '
                   f'Duration: {dt}')
 
+            losses = {
+                'loss': loss.item(),
+                'loss_content': loss_content.item(),
+                'loss_style': loss_style.item(),
+            }
+            cb_every_step(step, content, style, target, losses)
             # put the content, style and target images into one figure
-            plot_result(content, style, target, figsize=(10, 4))
+            # plot_result(content, style, target, figsize=(10, 4))
 
-    plot_result(content, style, target, figsize=(20, 8))
-
-    if isinstance(save_dir, str) and len(save_dir) > 0:
-        print_out(
-            'Final Result',
-            logger=logger.info,
-            params={
-                'save_dir': save_dir,
-                'content_path': os.path.join(save_dir, 'content.jpg'),
-                'style_path': os.path.join(save_dir, 'style.jpg'),
-                'target_path': os.path.join(save_dir, 'target.jpg'),
-            })
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
-        content_im = load_image_from_tensor(content, pillow_able=True)
-        style_im = load_image_from_tensor(style, pillow_able=True)
-        target_im = load_image_from_tensor(target, pillow_able=True)
-
-        content_im.save(os.path.join(save_dir, 'content.jpg'))
-        style_im.save(os.path.join(save_dir, 'style.jpg'))
-        target_im.save(os.path.join(save_dir, 'target.jpg'))
+    cb_final_step(content, style, target, history)
+    # plot_result(content, style, target, figsize=(20, 8))
+    # if isinstance(save_dir, str) and len(save_dir) > 0:
+    #     print_out(
+    #         'Final Result',
+    #         logger=logger.info,
+    #         params={
+    #             'save_dir': save_dir,
+    #             'content_path': os.path.join(save_dir, 'content.jpg'),
+    #             'style_path': os.path.join(save_dir, 'style.jpg'),
+    #             'target_path': os.path.join(save_dir, 'target.jpg'),
+    #         })
+    #     if not os.path.exists(save_dir):
+    #         os.makedirs(save_dir)
+    #
+    #     content_im = load_image_from_tensor(content, pillow_able=True)
+    #     style_im = load_image_from_tensor(style, pillow_able=True)
+    #     target_im = load_image_from_tensor(target, pillow_able=True)
+    #
+    #     content_im.save(os.path.join(save_dir, 'content.jpg'))
+    #     style_im.save(os.path.join(save_dir, 'style.jpg'))
+    #     target_im.save(os.path.join(save_dir, 'target.jpg'))
 
     return history

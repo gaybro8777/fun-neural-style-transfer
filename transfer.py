@@ -7,6 +7,8 @@ import torch
 from src.pt_config import CONTENT_FEATURE_LAYERS
 from src.pt_config import STYLE_FEATURE_LAYERS
 from src.pt_transfer import transfer as pt_transfer
+from src.pt_utils import cb_every_step
+from src.pt_utils import cb_final_step
 from src.utils import print_out
 from src.utils import set_logger
 
@@ -105,7 +107,7 @@ def main():
     if language == 'pt':
         print()
         print_out('Transfer parameters:', logger.info, params=vars(args))
-        history = pt_transfer(
+        pt_transfer(
             content_image_path,
             style_image_path,
             steps=steps,
@@ -116,13 +118,13 @@ def main():
             style_weights=style_weights,
             alpha=alpha,
             beta=beta,
-            save_dir=save_dir)
+            save_dir=save_dir,
+            cb_every_step=cb_every_step(save_dir),
+            cb_final_step=cb_final_step(save_dir))
 
         if isinstance(save_dir, str) and len(save_dir) > 0:
-            history_path = os.path.join(save_dir, 'history.json')
-            print_out('Save history to:', logger=logger.info, params={'history_path': history_path})
-            with open(history_path, 'w') as f:
-                json.dump(history, f)
+            message = f"The final results saved here {save_dir}"
+            print_out('Save history to:', logger=logger.info, params={'message': message})
 
 
 if __name__ == '__main__':
