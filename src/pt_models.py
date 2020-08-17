@@ -1,7 +1,11 @@
+import logging
 import torch
 import torchvision.models as models
 from src.pt_utils import torch_device
 from src.utils import print_out
+from src.utils import set_logger
+
+logger = set_logger(logging, __name__)
 
 
 def load_model():
@@ -44,7 +48,7 @@ def gen_features(image, model, layers, info_str=''):
     layers = {names[layer]: layer for layer in layers}
 
     if isinstance(info_str, str) and len(info_str) > 0:
-        print_out(info_str, params=layers)
+        print_out(info_str, logger=logger.info, params=layers)
 
     features = {}
     x = image

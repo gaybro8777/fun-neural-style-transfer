@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import numpy as np
 import os
 import torch
@@ -7,6 +8,9 @@ from src.pt_config import CONTENT_FEATURE_LAYERS
 from src.pt_config import STYLE_FEATURE_LAYERS
 from src.pt_transfer import transfer as pt_transfer
 from src.utils import print_out
+from src.utils import set_logger
+
+logger = set_logger(logging, __name__)
 
 LANGUAGES = {
     'pt': 'PyTorch',
@@ -100,7 +104,7 @@ def main():
 
     if language == 'pt':
         print()
-        print_out('Transfer parameters:', params=vars(args))
+        print_out('Transfer parameters:', logger.info, params=vars(args))
         history = pt_transfer(
             content_image_path,
             style_image_path,
@@ -116,7 +120,7 @@ def main():
 
         if isinstance(save_dir, str) and len(save_dir) > 0:
             history_path = os.path.join(save_dir, 'history.json')
-            print_out('Save history to:', params={'history_path': history_path})
+            print_out('Save history to:', logger=logger.info, params={'history_path': history_path})
             with open(history_path, 'w') as f:
                 json.dump(history, f)
 

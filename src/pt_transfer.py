@@ -1,5 +1,6 @@
 import collections
 from datetime import datetime
+import logging
 import os
 from tqdm import tqdm
 import torch
@@ -14,6 +15,9 @@ from src.pt_utils import plot_result
 from src.pt_utils import load_image_to_tensor
 from src.pt_utils import load_image_from_tensor
 from src.utils import print_out
+from src.utils import set_logger
+
+logger = set_logger(logging, __name__)
 
 
 def transfer(content_path,
@@ -90,10 +94,12 @@ def transfer(content_path,
 
     print_out(
         'The style weights for each layers:',
+        logger=logger.info,
         params=style_weights)
 
     print_out(
         'The ratio α/β, for best result can be either [1e-3, 8e-4, 5e-3, 5e-4]',
+        logger=logger.info,
         params={'alpha': alpha, 'beta': beta, 'alpha/beta': alpha / beta})
 
     # optimizer
@@ -146,12 +152,12 @@ def transfer(content_path,
             # put the content, style and target images into one figure
             plot_result(content, style, target, figsize=(10, 4))
 
-    print_out('Final Result', 0, '+')
     plot_result(content, style, target, figsize=(20, 8))
 
     if isinstance(save_dir, str) and len(save_dir) > 0:
         print_out(
             'Final Result',
+            logger=logger.info,
             params={
                 'save_dir': save_dir,
                 'content_path': os.path.join(save_dir, 'content.jpg'),
